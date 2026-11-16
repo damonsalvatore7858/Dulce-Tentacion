@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { clean } from "./order.ts";
+import { clean } from "@/lib/validation/order";
 
 const text = (max: number) => z.string().transform(clean).pipe(z.string().max(max));
 const required = (max: number) => z.string().transform(clean).pipe(z.string().min(1).max(max));

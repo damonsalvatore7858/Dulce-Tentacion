@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test tests/**/*.test.mts"
+    "test": "node --import ./tests/register.mjs --test tests/**/*.test.mts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "1.5.0",

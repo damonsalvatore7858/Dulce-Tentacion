@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { EVENT_KINDS, LIMITS, ORDER_MODES } from "../order/limits.ts";
-import { slugSchema } from "./params.ts";
+import { EVENT_KINDS, LIMITS, ORDER_MODES } from "@/lib/order/limits";
+import { slugSchema } from "@/lib/validation/params";
 
 // Quita caracteres de control y espacios repetidos.
 const CONTROL = /[\u0000-\u001F\u007F]/g;
