@@ -63,6 +63,7 @@ export type DefaultProduct = {
   precio_cop: number;
   destacado: boolean;
   image_path?: string | null;
+  video_url?: string | null;
 };
 
 export const DEFAULT_PRODUCTS: DefaultProduct[] = [

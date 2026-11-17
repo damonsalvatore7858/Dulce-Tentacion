@@ -4,11 +4,13 @@ import { randomUUID } from "node:crypto";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { done, fail, flag, formToRecord, logAdminError, revalidatePublic } from "@/lib/admin/forms";
 import { detectImage, MAX_IMAGE_BYTES } from "@/lib/admin/image";
+import { isValidVideoFile, MAX_VIDEO_BYTES } from "@/lib/media/video";
 import { slugify, withSuffix } from "@/lib/admin/slugify";
 import { categorySchema, parsePrice, productSchema } from "@/lib/validation/admin";
 import { z } from "zod";
 
 const BUCKET = "product-images";
+const VIDEO_BUCKET = "product-videos";
 const uuid = z.string().uuid();
 
 // ---------- Categorías ----------
@@ -100,6 +102,64 @@ async function processProductImage(
   return undefined; // Mantener la imagen previa sin cambios
 }
 
+// Procesa subida de video directo o enlace externo (YouTube/Instagram/TikTok)
+async function processProductVideo(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  productId: string,
+  formData: FormData,
+  backPath: string,
+  currentVideoUrl?: string | null,
+): Promise<string | null | undefined> {
+  const removeVideo = formData.get("remove_video") === "1";
+  const videoFile = formData.get("video_file");
+  const rawVideoUrl = formData.get("video_url");
+  const videoUrlString = typeof rawVideoUrl === "string" ? rawVideoUrl.trim() : "";
+
+  // 1. Archivo de video directo subido
+  if (videoFile instanceof File && videoFile.size > 0) {
+    if (videoFile.size > MAX_VIDEO_BYTES) fail(backPath, "video_grande");
+    if (!isValidVideoFile(videoFile)) fail(backPath, "video_tipo");
+
+    const ext = videoFile.name.endsWith(".webm") ? "webm" : "mp4";
+    const mime = ext === "webm" ? "video/webm" : "video/mp4";
+    const objectPath = `${productId}/${randomUUID()}.${ext}`;
+
+    const bytes = new Uint8Array(await videoFile.arrayBuffer());
+    const { error: uploadError } = await supabase.storage.from(VIDEO_BUCKET).upload(objectPath, bytes, {
+      contentType: mime,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+    if (uploadError) {
+      logAdminError("uploadVideo", uploadError.name);
+      fail(backPath, "video_subida");
+    }
+
+    if (currentVideoUrl && !currentVideoUrl.startsWith("http")) {
+      await supabase.storage.from(VIDEO_BUCKET).remove([currentVideoUrl]);
+    }
+    return objectPath;
+  }
+
+  // 2. Enlace externo proporcionado (ej. YouTube Shorts, Reel, TikTok)
+  if (videoUrlString) {
+    if (currentVideoUrl && !currentVideoUrl.startsWith("http")) {
+      await supabase.storage.from(VIDEO_BUCKET).remove([currentVideoUrl]);
+    }
+    return videoUrlString;
+  }
+
+  // 3. Eliminar video si se marcó
+  if (removeVideo) {
+    if (currentVideoUrl && !currentVideoUrl.startsWith("http")) {
+      await supabase.storage.from(VIDEO_BUCKET).remove([currentVideoUrl]);
+    }
+    return null;
+  }
+
+  return undefined; // Mantener sin cambios
+}
+
 // Procesa precios y disponibilidad por sede si vienen en el formulario.
 async function processProductPrices(
   supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
@@ -148,12 +208,21 @@ export async function saveProduct(formData: FormData) {
   const { id, ...row } = parsed.data;
 
   if (id) {
-    const { data: existing } = await supabase.from("products").select("image_path").eq("id", id).maybeSingle();
+    const { data: existing } = await supabase
+      .from("products")
+      .select("image_path, video_url")
+      .eq("id", id)
+      .maybeSingle();
+
     const newImagePath = await processProductImage(supabase, id, formData, backPath, existing?.image_path);
+    const newVideoUrl = await processProductVideo(supabase, id, formData, backPath, existing?.video_url);
 
     const updatePayload: Record<string, unknown> = { ...row };
     if (newImagePath !== undefined) {
       updatePayload.image_path = newImagePath;
+    }
+    if (newVideoUrl !== undefined) {
+      updatePayload.video_url = newVideoUrl;
     }
 
     const { error } = await supabase.from("products").update(updatePayload).eq("id", id);
@@ -167,9 +236,10 @@ export async function saveProduct(formData: FormData) {
     done(backPath);
   }
 
-  // Crear: ID generado, imagen en alta resolución, slug único y precios por sede en una sola acción.
+  // Crear: ID generado, imagen en alta resolución, video publicitario, slug único y precios por sede en una sola acción.
   const createdId = randomUUID();
   const newImagePath = await processProductImage(supabase, createdId, formData, backPath, null);
+  const newVideoUrl = await processProductVideo(supabase, createdId, formData, backPath, null);
 
   const base = slugify(row.nombre);
   let createdSuccess = false;
@@ -180,6 +250,7 @@ export async function saveProduct(formData: FormData) {
         id: createdId,
         ...row,
         image_path: newImagePath ?? null,
+        video_url: newVideoUrl ?? row.video_url ?? null,
         slug: withSuffix(base, attempt),
       });
 
@@ -194,6 +265,9 @@ export async function saveProduct(formData: FormData) {
   if (!createdSuccess) {
     if (newImagePath) {
       await supabase.storage.from(BUCKET).remove([newImagePath]);
+    }
+    if (newVideoUrl && !newVideoUrl.startsWith("http")) {
+      await supabase.storage.from(VIDEO_BUCKET).remove([newVideoUrl]);
     }
     fail(backPath, "guardar");
   }
@@ -217,13 +291,16 @@ export async function deleteProduct(formData: FormData) {
   const id = uuid.safeParse(formData.get("id"));
   if (!id.success) fail("/admin/productos", "datos");
 
-  const { data: product } = await supabase.from("products").select("image_path").eq("id", id.data).maybeSingle();
+  const { data: product } = await supabase.from("products").select("image_path, video_url").eq("id", id.data).maybeSingle();
   const { error } = await supabase.from("products").delete().eq("id", id.data);
   if (error) {
     logAdminError("deleteProduct", error.code);
     fail("/admin/productos", "guardar");
   }
   if (product?.image_path) await supabase.storage.from(BUCKET).remove([product.image_path as string]);
+  if (product?.video_url && !product.video_url.startsWith("http")) {
+    await supabase.storage.from(VIDEO_BUCKET).remove([product.video_url as string]);
+  }
   revalidatePublic();
   done("/admin/productos");
 }

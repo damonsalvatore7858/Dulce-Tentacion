@@ -45,6 +45,7 @@ export default async function EditProductPage({ params, searchParams }: Props) {
         sedes={sedes.data ?? []}
         prices={prices.data ?? []}
         initialImageUrl={image}
+        initialVideoUrl={values.video_url}
       />
 
       <div className="pt-6 border-t border-border/80 max-w-3xl">

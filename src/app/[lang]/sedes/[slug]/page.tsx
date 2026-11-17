@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { WhatsAppFab } from "@/components/order/whatsapp-fab";
+import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { JsonLd } from "@/components/seo/json-ld";
 import { MapEmbed } from "@/components/sedes/map-embed";
 import { SedeActions } from "@/components/sedes/sede-actions";
@@ -75,6 +76,13 @@ export default async function SedePage({ params }: Props) {
         </Button>
 
         <MapEmbed sede={sede} title={`${dict.sedes.mapTitle}: ${sede.nombre}`} />
+
+        <ReviewsSection
+          initialSedeSlug={sede.slug as "belen" | "ambala"}
+          showBranchFilter={false}
+          belenMapsUrl={sede.slug === "belen" ? sede.maps_url : null}
+          ambalaMapsUrl={sede.slug === "ambala" ? sede.maps_url : null}
+        />
       </div>
     </>
   );

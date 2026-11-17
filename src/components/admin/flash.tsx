@@ -11,6 +11,9 @@ const MESSAGES: Record<string, string> = {
   imagen_grande: "La imagen pesa más de 10 MB. Elige una imagen de hasta 10 MB.",
   imagen_tipo: "Solo se aceptan imágenes JPG, PNG o WebP.",
   imagen_subida: "No se pudo subir la imagen. Inténtalo de nuevo.",
+  video_grande: "El archivo de video supera el límite de 25 MB. Elige un video más liviano o enlaza desde YouTube/Instagram.",
+  video_tipo: "Solo se aceptan videos en formato MP4 o WebM.",
+  video_subida: "No se pudo subir el video. Inténtalo de nuevo.",
   codigo: "El código no es correcto.",
   intentos: "Demasiados intentos. Espera unos minutos.",
 };

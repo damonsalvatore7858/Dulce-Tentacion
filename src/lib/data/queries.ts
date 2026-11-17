@@ -21,12 +21,20 @@ const SEDE_COLUMNS =
   "id, slug, nombre, direccion, barrio, ciudad, whatsapp, telefono, maps_url, maps_embed_url, horarios, horario_nota, horario_nota_en, domicilios, orden";
 
 const PRODUCT_COLUMNS =
-  "id, slug, nombre, nombre_en, descripcion, descripcion_en, image_path, destacado, es_ejemplo, category_id";
+  "id, slug, nombre, nombre_en, descripcion, descripcion_en, image_path, video_url, destacado, es_ejemplo, category_id";
 
 export function publicImageUrl(path: string | null): string | null {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!path || !base) return null;
   return `${base}/storage/v1/object/public/product-images/${path}`;
+}
+
+export function publicVideoUrl(urlOrPath: string | null | undefined): string | null {
+  if (!urlOrPath) return null;
+  if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) return urlOrPath;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  return `${base}/storage/v1/object/public/product-videos/${urlOrPath}`;
 }
 
 export async function getSedes(): Promise<Sede[]> {

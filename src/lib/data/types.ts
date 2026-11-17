@@ -34,6 +34,7 @@ export type CatalogItem = {
   descripcion: string | null;
   descripcion_en: string | null;
   image_path: string | null;
+  video_url?: string | null;
   destacado: boolean;
   es_ejemplo: boolean;
   category_id: string;
@@ -63,5 +64,6 @@ export type Moment = {
   descripcion: string | null;
   descripcion_en: string | null;
   image_path: string | null;
+  video_url?: string | null;
   precios: MomentPrice[];
 };

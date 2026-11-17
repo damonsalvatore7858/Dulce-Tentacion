@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { detectImage, MAX_IMAGE_BYTES } from "../src/lib/admin/image.ts";
 import { slugify, withSuffix } from "../src/lib/admin/slugify.ts";
 import { normalizeWhatsapp } from "../src/lib/validation/admin.ts";
+import { parseVideoUrl } from "../src/lib/media/video.ts";
+import { menuJsonLd } from "../src/lib/seo/json-ld.ts";
+import { DEFAULT_SEDES } from "../src/lib/data/catalog-defaults.ts";
 
 test("MAX_IMAGE_BYTES permite subida de fotos en alta resolución de hasta 10 MB", () => {
   assert.strictEqual(MAX_IMAGE_BYTES, 10 * 1024 * 1024);
@@ -45,4 +48,45 @@ test("normalizeWhatsapp normaliza formatos comunes colombianos a 57 + 10 dígito
   assert.strictEqual(normalizeWhatsapp("573017430183"), "573017430183");
   assert.strictEqual(normalizeWhatsapp(""), null);
   assert.strictEqual(normalizeWhatsapp("123"), undefined); // Número inválido
+});
+
+test("parseVideoUrl identifica correctamente YouTube, Instagram, TikTok y videos directos", () => {
+  const yt = parseVideoUrl("https://youtube.com/shorts/kJQP7kiw5Fk?feature=share");
+  assert.strictEqual(yt?.type, "youtube");
+  assert.ok(yt?.embedUrl?.includes("youtube-nocookie.com/embed/kJQP7kiw5Fk"));
+
+  const ig = parseVideoUrl("https://www.instagram.com/reel/C89abcdefgh/?igsh=xyz");
+  assert.strictEqual(ig?.type, "instagram");
+  assert.strictEqual(ig?.embedUrl, "https://www.instagram.com/reel/C89abcdefgh/embed");
+
+  const direct = parseVideoUrl("https://storage.example.com/videos/waffle.mp4");
+  assert.strictEqual(direct?.type, "direct");
+  assert.strictEqual(direct?.isDirectFile, true);
+
+  assert.strictEqual(parseVideoUrl(""), null);
+});
+
+test("menuJsonLd genera esquema Schema.org Menu y MenuItem con precios válidos", () => {
+  const sede = DEFAULT_SEDES[0];
+  const sections = [
+    {
+      category: { nombre: "Waffles", slug: "waffles" },
+      items: [
+        {
+          id: "item-1",
+          nombre: "Waffle Selva Negra",
+          precio_cop: 23000,
+          disponible: true,
+        },
+      ],
+    },
+  ];
+
+  const jsonLd = menuJsonLd(sede, sections, "es");
+  assert.strictEqual(jsonLd["@type"], "Menu");
+  assert.strictEqual(jsonLd.hasMenuSection.length, 1);
+  assert.strictEqual(jsonLd.hasMenuSection[0].name, "Waffles");
+  assert.strictEqual(jsonLd.hasMenuSection[0].hasMenuItem.length, 1);
+  assert.strictEqual(jsonLd.hasMenuSection[0].hasMenuItem[0].name, "Waffle Selva Negra");
+  assert.strictEqual(jsonLd.hasMenuSection[0].hasMenuItem[0].offers?.price, 23000);
 });

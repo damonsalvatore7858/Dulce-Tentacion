@@ -1,6 +1,7 @@
 import { saveProduct } from "@/actions/admin/catalog";
 import { Check, Field, selectClass, textareaClass } from "@/components/admin/fields";
 import { ImageUploader } from "@/components/admin/image-uploader";
+import { VideoUploader } from "@/components/admin/video-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -11,6 +12,7 @@ export type ProductValues = {
   descripcion?: string | null;
   descripcion_en?: string | null;
   category_id?: string;
+  video_url?: string | null;
   destacado?: boolean;
   activo?: boolean;
   es_ejemplo?: boolean;
@@ -34,6 +36,7 @@ type Props = {
   sedes?: SedeOption[];
   prices?: ProductPriceRow[];
   initialImageUrl?: string | null;
+  initialVideoUrl?: string | null;
 };
 
 export function ProductForm({
@@ -42,6 +45,7 @@ export function ProductForm({
   sedes = [],
   prices = [],
   initialImageUrl,
+  initialVideoUrl,
 }: Props) {
   const isEditing = Boolean(values.id);
 
@@ -138,7 +142,26 @@ export function ProductForm({
         />
       </section>
 
-      {/* 3. Precios y disponibilidad por sede */}
+      {/* 3. Video publicitario del producto (Opcional) */}
+      <section className="flex flex-col gap-4 rounded-card border border-border bg-card p-6 shadow-soft">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-display text-xl sm:text-2xl text-foreground">
+            Video publicitario (Opcional)
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Sube un video corto tipo reel publicitario (MP4 o WebM hasta 25 MB) o pega un enlace de YouTube Shorts, Instagram Reel o TikTok.
+          </p>
+        </div>
+
+        <VideoUploader
+          initialVideoUrl={initialVideoUrl ?? values.video_url}
+          inputName="video_url"
+          fileInputName="video_file"
+          removeInputName="remove_video"
+        />
+      </section>
+
+      {/* 4. Precios y disponibilidad por sede */}
       {sedes.length > 0 ? (
         <section className="flex flex-col gap-4 rounded-card border border-border bg-card p-6 shadow-soft">
           <div className="flex flex-col gap-1">

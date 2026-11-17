@@ -28,6 +28,7 @@ export const productSchema = z.object({
   descripcion: optional(600),
   descripcion_en: optional(600),
   category_id: uuid,
+  video_url: optional(500),
   destacado: z.boolean(),
   activo: z.boolean(),
   es_ejemplo: z.boolean(),

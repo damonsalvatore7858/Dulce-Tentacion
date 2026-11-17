@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/menu/product-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { JsonLd } from "@/components/seo/json-ld";
 import { AddToCart } from "@/components/order/add-to-cart";
 import { WhatsAppFab } from "@/components/order/whatsapp-fab";
 import { SedeActions } from "@/components/sedes/sede-actions";
@@ -12,6 +13,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getCatalogo, getSedeBySlug, getSedes, publicImageUrl } from "@/lib/data/queries";
 import { pick } from "@/lib/i18n-text";
 import { pageAlternates } from "@/lib/seo/alternates";
+import { menuJsonLd } from "@/lib/seo/json-ld";
 import { validWhatsapp } from "@/lib/sede-links";
 import { slugSchema } from "@/lib/validation/params";
 
@@ -75,6 +77,7 @@ export default async function CartaSedePage({ params }: Props) {
 
   return (
     <>
+      <JsonLd data={menuJsonLd(sede, groups, lang)} />
       <WhatsAppFab sede={sede} label={dict.common.whatsapp} />
       <PageHeader title={`${dict.carta.title} - ${sede.nombre}`} intro={dict.carta.note} />
       <div className="page-container flex flex-col gap-8 pb-16">
@@ -131,6 +134,7 @@ export default async function CartaSedePage({ params }: Props) {
                         priceCop={item.precio_cop}
                         available={item.disponible}
                         imageUrl={publicImageUrl(item.image_path)}
+                        videoUrl={item.video_url}
                         isExample={item.es_ejemplo}
                         highlighted={item.destacado}
                         labels={labels}

@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { MomentCard } from "@/components/menu/moment-card";
+import { VideoShowcase } from "@/components/media/video-showcase";
+import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { JsonLd } from "@/components/seo/json-ld";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Faq } from "@/components/shared/faq";
@@ -55,6 +57,8 @@ export default async function HomePage({ params }: Props) {
   const banner = parseBanner(settings);
   const moment = await getMomento(settings);
   const bannerText = lang === "en" ? banner.texto_en || banner.texto_es : banner.texto_es;
+  const belenSede = (sedes ?? []).find((s) => s.slug === "belen");
+  const ambalaSede = (sedes ?? []).find((s) => s.slug === "ambala");
 
   return (
     <>
@@ -180,6 +184,17 @@ export default async function HomePage({ params }: Props) {
           </Button>
         </Card>
       </section>
+
+      {/* Videos publicitarios de especialidades */}
+      <VideoShowcase lang={lang} />
+
+      {/* Reseñas y opiniones reales verificadas */}
+      <div className="page-container">
+        <ReviewsSection
+          belenMapsUrl={belenSede?.maps_url}
+          ambalaMapsUrl={ambalaSede?.maps_url}
+        />
+      </div>
 
       <section className="page-container flex max-w-3xl flex-col gap-6 pb-12">
         <SectionTitle>{dict.home.faqTitle}</SectionTitle>

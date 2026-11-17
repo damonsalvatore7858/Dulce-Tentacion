@@ -45,6 +45,24 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
     },
     description: dict.meta.description,
     applicationName: dict.meta.siteName,
+    keywords: [
+      "heladería en Ibagué",
+      "waffles en Ibagué",
+      "cholados Ibagué",
+      "crepes Ibagué",
+      "ensaladas de frutas con helado",
+      "postres y copas de helado",
+      "helados artesanales Ibagué Belén",
+      "heladería Ambalá Ibagué",
+      "domicilios heladería Ibagué",
+    ],
+    alternates: {
+      canonical: `/${lang}`,
+      languages: {
+        "es-CO": "/es",
+        "en-US": "/en",
+      },
+    },
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
@@ -57,6 +75,13 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
       type: "website",
       siteName: dict.meta.siteName,
       locale: lang === "es" ? "es_CO" : "en_US",
+      title: `${dict.meta.siteName} | ${dict.meta.tagline}`,
+      description: dict.meta.description,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${dict.meta.siteName} | ${dict.meta.tagline}`,
+      description: dict.meta.description,
     },
   };
 }

@@ -13,6 +13,7 @@ type Props = {
   available: boolean;
   imageUrl?: string | null;
   imageAlt?: string;
+  videoUrl?: string | null;
   isExample?: boolean;
   highlighted?: boolean;
   labels: { consultPrice: string; soldOut: string; example: string };
@@ -27,6 +28,7 @@ export function ProductCard({
   available,
   imageUrl,
   imageAlt,
+  videoUrl,
   isExample = false,
   highlighted = false,
   labels,
@@ -69,6 +71,11 @@ export function ProductCard({
           {highlighted ? (
             <Badge variant="accent" className="shadow-xs font-bold">
               ★ Destacado
+            </Badge>
+          ) : null}
+          {videoUrl ? (
+            <Badge variant="default" className="bg-black/65 text-white backdrop-blur-xs font-bold shadow-xs">
+              ▶ Video
             </Badge>
           ) : null}
           {isExample ? <Badge variant="example" className="bg-card">{labels.example}</Badge> : null}
