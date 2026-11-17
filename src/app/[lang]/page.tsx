@@ -23,6 +23,7 @@ import {
   getSedes,
   getSettings,
   parseBanner,
+  parseShowcaseVideos,
 } from "@/lib/data/queries";
 import { pick } from "@/lib/i18n-text";
 import { pageAlternates } from "@/lib/seo/alternates";
@@ -59,6 +60,7 @@ export default async function HomePage({ params }: Props) {
   const bannerText = lang === "en" ? banner.texto_en || banner.texto_es : banner.texto_es;
   const belenSede = (sedes ?? []).find((s) => s.slug === "belen");
   const ambalaSede = (sedes ?? []).find((s) => s.slug === "ambala");
+  const showcaseVideos = parseShowcaseVideos(settings);
 
   return (
     <>
@@ -186,7 +188,7 @@ export default async function HomePage({ params }: Props) {
       </section>
 
       {/* Videos publicitarios de especialidades */}
-      <VideoShowcase lang={lang} />
+      <VideoShowcase lang={lang} videos={showcaseVideos} />
 
       {/* Reseñas y opiniones reales verificadas */}
       <div className="page-container">

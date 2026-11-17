@@ -11,6 +11,7 @@ export type ShowcaseVideo = {
   videoUrl: string;
   posterUrl?: string | null;
   targetHref: string;
+  active?: boolean;
 };
 
 type Props = {
@@ -18,27 +19,9 @@ type Props = {
   videos?: ShowcaseVideo[];
 };
 
-const DEFAULT_SHOWCASE_VIDEOS: ShowcaseVideo[] = [
-  {
-    id: "video-1",
-    title: "Waffles recién horneados",
-    subtitle: "Crocantes por fuera, suaves por dentro, con frutas frescas y helado cremoso.",
-    videoUrl: "https://www.youtube.com/shorts/kJQP7kiw5Fk",
-    posterUrl: "/brand/logo.jpg",
-    targetHref: "/carta",
-  },
-  {
-    id: "video-2",
-    title: "Cholados tradicionales",
-    subtitle: "Hielo finamente raspado, frutas tropicales, lechera artesanal y copa de helado.",
-    videoUrl: "https://www.youtube.com/shorts/L_LUpnjgPso",
-    posterUrl: "/brand/logo.jpg",
-    targetHref: "/carta",
-  },
-];
-
-export function VideoShowcase({ lang, videos = DEFAULT_SHOWCASE_VIDEOS }: Props) {
-  if (videos.length === 0) return null;
+export function VideoShowcase({ lang, videos = [] }: Props) {
+  const activeVideos = videos.filter((v) => v.active !== false && v.videoUrl);
+  if (activeVideos.length === 0) return null;
 
   return (
     <section aria-labelledby="video-showcase-title" className="page-container flex flex-col gap-6 pb-12">
@@ -53,7 +36,7 @@ export function VideoShowcase({ lang, videos = DEFAULT_SHOWCASE_VIDEOS }: Props)
               Mira cómo preparamos tu antojo
             </h2>
             <p className="text-sm text-muted-foreground">
-              Videos cortos y tentadores de nuestros postres y especialidades artesanales.
+              Videos de nuestros postres, waffles y especialidades artesanales.
             </p>
           </div>
 
@@ -67,7 +50,7 @@ export function VideoShowcase({ lang, videos = DEFAULT_SHOWCASE_VIDEOS }: Props)
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 max-w-4xl">
-        {videos.map((item) => (
+        {activeVideos.map((item) => (
           <div
             key={item.id}
             className="flex flex-col overflow-hidden rounded-3xl border border-border/80 bg-card p-4 shadow-soft transition-all duration-300 hover:border-primary/40 hover:shadow-lift"
@@ -89,14 +72,16 @@ export function VideoShowcase({ lang, videos = DEFAULT_SHOWCASE_VIDEOS }: Props)
                 <h3 className="font-display text-xl sm:text-2xl text-foreground">
                   {item.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                  {item.subtitle}
-                </p>
+                {item.subtitle ? (
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    {item.subtitle}
+                  </p>
+                ) : null}
               </div>
 
               <div className="pt-2">
                 <Button asChild size="sm" className="w-full font-bold shadow-2xs">
-                  <Link href={href(lang, item.targetHref)}>
+                  <Link href={href(lang, item.targetHref || "/carta")}>
                     Pedir por WhatsApp
                     <ArrowRight className="size-3.5" />
                   </Link>

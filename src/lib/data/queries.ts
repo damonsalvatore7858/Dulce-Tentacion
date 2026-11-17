@@ -245,6 +245,8 @@ export function parseModulos(settings: Settings): Modulos {
   return parsed.success ? parsed.data : { eventos: true, reservas: true };
 }
 
+export { parseShowcaseVideos, type ShowcaseVideoItem } from "./showcase";
+
 export async function getMomento(settings: Settings): Promise<Moment | null> {
   const parsed = momentoSchema.safeParse(settings.producto_del_momento);
   const signatureSlug = "copa-gigante-fresas-chantilli-chocolate";

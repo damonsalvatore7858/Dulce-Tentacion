@@ -5,6 +5,7 @@ import { slugify, withSuffix } from "../src/lib/admin/slugify.ts";
 import { normalizeWhatsapp } from "../src/lib/validation/admin.ts";
 import { parseVideoUrl } from "../src/lib/media/video.ts";
 import { menuJsonLd } from "../src/lib/seo/json-ld.ts";
+import { parseShowcaseVideos } from "../src/lib/data/showcase.ts";
 import { DEFAULT_SEDES } from "../src/lib/data/catalog-defaults.ts";
 
 test("MAX_IMAGE_BYTES permite subida de fotos en alta resolución de hasta 10 MB", () => {
@@ -89,4 +90,26 @@ test("menuJsonLd genera esquema Schema.org Menu y MenuItem con precios válidos"
   assert.strictEqual(jsonLd.hasMenuSection[0].hasMenuItem.length, 1);
   assert.strictEqual(jsonLd.hasMenuSection[0].hasMenuItem[0].name, "Waffle Selva Negra");
   assert.strictEqual(jsonLd.hasMenuSection[0].hasMenuItem[0].offers?.price, 23000);
+});
+
+test("parseShowcaseVideos procesa la lista de videos y omite elementos vacíos", () => {
+  const empty = parseShowcaseVideos({});
+  assert.deepStrictEqual(empty, []);
+
+  const valid = parseShowcaseVideos({
+    videos_showcase: [
+      {
+        id: "v-1",
+        title: "Waffle Selva Negra",
+        subtitle: "Preparado al momento",
+        videoUrl: "https://youtube.com/shorts/test",
+        posterUrl: null,
+        targetHref: "/carta",
+        active: true,
+      },
+    ],
+  });
+  assert.strictEqual(valid.length, 1);
+  assert.strictEqual(valid[0].title, "Waffle Selva Negra");
+  assert.strictEqual(valid[0].active, true);
 });
