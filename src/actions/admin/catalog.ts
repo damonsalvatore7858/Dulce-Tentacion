@@ -55,6 +55,85 @@ export async function deleteCategory(formData: FormData) {
 }
 
 // ---------- Productos ----------
+
+// Procesa subida de imagen en alta resolución o eliminación si se solicitó.
+async function processProductImage(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  productId: string,
+  formData: FormData,
+  backPath: string,
+  currentImagePath?: string | null,
+): Promise<string | null | undefined> {
+  const removeImage = formData.get("remove_image") === "1";
+  const file = formData.get("file");
+
+  if (file instanceof File && file.size > 0) {
+    if (file.size > MAX_IMAGE_BYTES) fail(backPath, "imagen_grande");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const kind = detectImage(bytes);
+    if (!kind) fail(backPath, "imagen_tipo");
+
+    const objectPath = `${productId}/${randomUUID()}.${kind.ext}`;
+    const { error: uploadError } = await supabase.storage.from(BUCKET).upload(objectPath, bytes, {
+      contentType: kind.mime,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+    if (uploadError) {
+      logAdminError("uploadImage", uploadError.name);
+      fail(backPath, "imagen_subida");
+    }
+
+    if (currentImagePath) {
+      await supabase.storage.from(BUCKET).remove([currentImagePath]);
+    }
+    return objectPath;
+  }
+
+  if (removeImage) {
+    if (currentImagePath) {
+      await supabase.storage.from(BUCKET).remove([currentImagePath]);
+    }
+    return null;
+  }
+
+  return undefined; // Mantener la imagen previa sin cambios
+}
+
+// Procesa precios y disponibilidad por sede si vienen en el formulario.
+async function processProductPrices(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  productId: string,
+  formData: FormData,
+  backPath: string,
+): Promise<boolean> {
+  const sedeIds = formData.getAll("sede_id").map(String);
+  if (sedeIds.length === 0) return false;
+
+  const rows: { product_id: string; sede_id: string; precio_cop: number | null; disponible: boolean }[] = [];
+  for (const sedeId of sedeIds) {
+    if (!uuid.safeParse(sedeId).success) fail(backPath, "datos");
+    const price = parsePrice(String(formData.get(`precio_${sedeId}`) ?? ""));
+    if (price === undefined) fail(backPath, "precio");
+    rows.push({
+      product_id: productId,
+      sede_id: sedeId,
+      precio_cop: price,
+      disponible: flag(formData, `disp_${sedeId}`),
+    });
+  }
+
+  if (rows.length > 0) {
+    const { error } = await supabase.from("product_prices").upsert(rows, { onConflict: "product_id,sede_id" });
+    if (error) {
+      logAdminError("savePrices", error.code);
+      fail(backPath, "guardar");
+    }
+    return true;
+  }
+  return false;
+}
+
 export async function saveProduct(formData: FormData) {
   const { supabase } = await requireAdmin();
   const parsed = productSchema.safeParse({
@@ -69,38 +148,66 @@ export async function saveProduct(formData: FormData) {
   const { id, ...row } = parsed.data;
 
   if (id) {
-    const { error } = await supabase.from("products").update(row).eq("id", id);
+    const { data: existing } = await supabase.from("products").select("image_path").eq("id", id).maybeSingle();
+    const newImagePath = await processProductImage(supabase, id, formData, backPath, existing?.image_path);
+
+    const updatePayload: Record<string, unknown> = { ...row };
+    if (newImagePath !== undefined) {
+      updatePayload.image_path = newImagePath;
+    }
+
+    const { error } = await supabase.from("products").update(updatePayload).eq("id", id);
     if (error) {
       logAdminError("saveProduct", error.code);
       fail(backPath, "guardar");
     }
+
+    await processProductPrices(supabase, id, formData, backPath);
     revalidatePublic();
     done(backPath);
   }
 
-  // Crear: slug único y una fila de precio (sin precio) por cada sede.
+  // Crear: ID generado, imagen en alta resolución, slug único y precios por sede en una sola acción.
+  const createdId = randomUUID();
+  const newImagePath = await processProductImage(supabase, createdId, formData, backPath, null);
+
   const base = slugify(row.nombre);
-  let createdId: string | undefined;
-  for (let attempt = 0; attempt < 3 && !createdId; attempt++) {
-    const { data, error } = await supabase
+  let createdSuccess = false;
+  for (let attempt = 0; attempt < 3 && !createdSuccess; attempt++) {
+    const { error } = await supabase
       .from("products")
-      .insert({ ...row, slug: withSuffix(base, attempt) })
-      .select("id")
-      .single();
-    if (data) createdId = data.id as string;
-    else if (error?.code !== "23505") {
-      logAdminError("createProduct", error?.code);
+      .insert({
+        id: createdId,
+        ...row,
+        image_path: newImagePath ?? null,
+        slug: withSuffix(base, attempt),
+      });
+
+    if (!error) {
+      createdSuccess = true;
+    } else if (error.code !== "23505") {
+      logAdminError("createProduct", error.code);
       break;
     }
   }
-  if (!createdId) fail(backPath, "guardar");
 
-  const { data: sedes } = await supabase.from("sedes").select("id");
-  if (sedes && sedes.length > 0) {
-    await supabase
-      .from("product_prices")
-      .insert(sedes.map((sede) => ({ product_id: createdId, sede_id: sede.id, precio_cop: null, disponible: true })));
+  if (!createdSuccess) {
+    if (newImagePath) {
+      await supabase.storage.from(BUCKET).remove([newImagePath]);
+    }
+    fail(backPath, "guardar");
   }
+
+  const hadPrices = await processProductPrices(supabase, createdId, formData, backPath);
+  if (!hadPrices) {
+    const { data: sedes } = await supabase.from("sedes").select("id");
+    if (sedes && sedes.length > 0) {
+      await supabase
+        .from("product_prices")
+        .insert(sedes.map((sede) => ({ product_id: createdId, sede_id: sede.id, precio_cop: null, disponible: true })));
+    }
+  }
+
   revalidatePublic();
   done(`/admin/productos/${createdId}`);
 }

@@ -8,12 +8,23 @@ export const metadata = { title: "Agregar producto" };
 export default async function NewProductPage({ searchParams }: FlashParams) {
   const { ok, error } = await searchParams;
   const { supabase } = await requireAdmin();
-  const { data } = await supabase.from("categories").select("id, nombre").order("orden");
+
+  const [categories, sedes] = await Promise.all([
+    supabase.from("categories").select("id, nombre").order("orden"),
+    supabase.from("sedes").select("id, nombre, direccion").order("orden"),
+  ]);
 
   return (
-    <PanelShell title="Agregar producto" intro="Después de guardar podrás poner precios por sede y una foto.">
+    <PanelShell
+      title="Agregar producto"
+      intro="Ingresa los datos del producto, sube su fotografía en alta calidad y define los precios para cada sede en un solo paso."
+    >
       <Flash ok={ok} error={error} />
-      <ProductForm values={{}} categories={data ?? []} />
+      <ProductForm
+        values={{}}
+        categories={categories.data ?? []}
+        sedes={sedes.data ?? []}
+      />
     </PanelShell>
   );
 }

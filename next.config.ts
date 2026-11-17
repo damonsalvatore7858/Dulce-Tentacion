@@ -51,8 +51,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
-    // Subida de imágenes del admin (máximo 2 MB por archivo; el resto del formulario añade poco).
-    serverActions: { bodySizeLimit: "3mb" },
+    // Subida de imágenes de alta calidad del admin (hasta 10 MB por archivo).
+    serverActions: { bodySizeLimit: "12mb" },
   },
   images: {
     formats: ["image/avif", "image/webp"],

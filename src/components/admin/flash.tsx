@@ -8,7 +8,7 @@ const MESSAGES: Record<string, string> = {
   horario: "Revisa el horario: cada día necesita hora de apertura y de cierre.",
   fechas: "Revisa las fechas: la fecha final debe ser posterior a la inicial.",
   imagen: "Elige una imagen.",
-  imagen_grande: "La imagen pesa más de 2 MB. Usa una más liviana.",
+  imagen_grande: "La imagen pesa más de 10 MB. Elige una imagen de hasta 10 MB.",
   imagen_tipo: "Solo se aceptan imágenes JPG, PNG o WebP.",
   imagen_subida: "No se pudo subir la imagen. Inténtalo de nuevo.",
   codigo: "El código no es correcto.",

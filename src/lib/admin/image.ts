@@ -17,4 +17,5 @@ export function detectImage(bytes: Uint8Array): ImageKind | null {
   return null;
 }
 
-export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+// Límite de subida: 10 MB para soportar fotos en alta resolución desde smartphones o cámaras.
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;

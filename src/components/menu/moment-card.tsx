@@ -29,7 +29,7 @@ export function MomentCard({ lang, moment, sedes, dict }: Props) {
     <Card className="grid overflow-hidden rounded-2xl sm:rounded-3xl border-2 border-primary/40 bg-card shadow-soft md:grid-cols-2">
       <div className="relative min-h-64 sm:min-h-72 w-full overflow-hidden bg-linear-to-br from-brand-pastel/50 via-muted to-accent/20">
         {image ? (
-          <Image src={image} alt={name} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          <Image src={image} alt={name} fill sizes="(min-width: 768px) 50vw, 100vw" quality={85} className="object-cover" />
         ) : (
           <div aria-hidden="true" className="relative flex h-full min-h-64 sm:min-h-72 w-full flex-col items-center justify-center p-6 text-primary">
             <div className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-brand-pink/20 blur-2xl" />

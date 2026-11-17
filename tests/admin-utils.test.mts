@@ -1,8 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { detectImage } from "../src/lib/admin/image.ts";
+import { detectImage, MAX_IMAGE_BYTES } from "../src/lib/admin/image.ts";
 import { slugify, withSuffix } from "../src/lib/admin/slugify.ts";
 import { normalizeWhatsapp } from "../src/lib/validation/admin.ts";
+
+test("MAX_IMAGE_BYTES permite subida de fotos en alta resolución de hasta 10 MB", () => {
+  assert.strictEqual(MAX_IMAGE_BYTES, 10 * 1024 * 1024);
+});
 
 test("detectImage identifica JPEG, PNG y WebP por magic bytes", () => {
   const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
