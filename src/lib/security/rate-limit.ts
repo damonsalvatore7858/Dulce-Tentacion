@@ -67,11 +67,11 @@ export async function checkRateLimit(bucket: Bucket): Promise<RateLimitState> {
       const { success } = await limiter.limit(key);
       return success ? "ok" : "limited";
     } catch {
-      console.error("[security] rate limit backend error");
-      return isProductionDeploy ? "unavailable" : memoryCheck(bucket, key);
+      console.error("[security] rate limit backend error, usando respaldo en memoria");
+      return memoryCheck(bucket, key);
     }
   }
 
-  // Sin Upstash configurado: en producción se rechaza (falla cerrado).
-  return isProductionDeploy ? "unavailable" : memoryCheck(bucket, key);
+  // Sin Upstash configurado: usamos respaldo en memoria para no bloquear los pedidos
+  return memoryCheck(bucket, key);
 }

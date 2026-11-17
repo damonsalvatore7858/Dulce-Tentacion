@@ -24,7 +24,18 @@ declare global {
   }
 }
 
-const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+// Las claves de prueba oficiales de Cloudflare (1x000000..., 2x000000..., 3x000000...)
+// provocan que el iframe de Cloudflare muestre un aviso rojo intrusivo:
+// "Solo para pruebas. Si se ve, informe al propietario del sitio".
+// Por ello, solo activamos el widget visual si se configura una clave real de producción (ej: 0x4AAAAAA...).
+const rawSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const isTestKey =
+  !rawSiteKey ||
+  rawSiteKey.startsWith("1x000000") ||
+  rawSiteKey.startsWith("2x000000") ||
+  rawSiteKey.startsWith("3x000000");
+
+const SITE_KEY = isTestKey ? undefined : rawSiteKey;
 const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 type Props = {

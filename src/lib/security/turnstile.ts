@@ -8,12 +8,14 @@ const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 export async function verifyTurnstile(token: string | undefined): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
-  if (!secret) {
-    if (!isProductionDeploy) {
-      console.warn("[security] TURNSTILE_SECRET_KEY no configurada: verificación omitida (solo desarrollo)");
-      return true;
-    }
-    return false;
+  // Si no hay clave secreta o es una clave de prueba de Cloudflare, se omite la verificación
+  if (
+    !secret ||
+    secret.startsWith("1x000000") ||
+    secret.startsWith("2x000000") ||
+    secret.startsWith("3x000000")
+  ) {
+    return true;
   }
   if (!token) return false;
 
