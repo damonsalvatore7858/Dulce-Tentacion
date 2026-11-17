@@ -4,7 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Pref = "system" | "light" | "dark";
+type Pref = "light" | "dark" | "system";
 
 const KEY = "theme";
 const listeners = new Set<() => void>();
@@ -12,22 +12,20 @@ const listeners = new Set<() => void>();
 function readPref(): Pref {
   try {
     const value = localStorage.getItem(KEY);
-    return value === "light" || value === "dark" ? value : "system";
+    return value === "light" || value === "dark" || value === "system" ? value : "light";
   } catch {
-    return "system";
+    return "light";
   }
 }
 
 function applyPref(pref: Pref) {
   const root = document.documentElement;
-  if (pref === "system") root.removeAttribute("data-theme");
-  else root.setAttribute("data-theme", pref);
+  root.setAttribute("data-theme", pref);
 }
 
 function writePref(pref: Pref) {
   try {
-    if (pref === "system") localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, pref);
+    localStorage.setItem(KEY, pref);
   } catch {
     // Sin almacenamiento: el cambio dura solo esta visita.
   }
@@ -44,16 +42,16 @@ function subscribe(notify: () => void) {
   };
 }
 
-const NEXT: Record<Pref, Pref> = { system: "light", light: "dark", dark: "system" };
+const NEXT: Record<Pref, Pref> = { light: "dark", dark: "system", system: "light" };
 
 type Props = {
   labels: { label: string; light: string; dark: string; system: string };
 };
 
 export function ThemeToggle({ labels }: Props) {
-  const pref = useSyncExternalStore(subscribe, readPref, () => "system" as Pref);
+  const pref = useSyncExternalStore(subscribe, readPref, () => "light" as Pref);
 
-  // Aplica la preferencia guardada al cargar.
+  // Aplica la preferencia guardada al cargar (por defecto fondo blanco 'light').
   useEffect(() => {
     applyPref(readPref());
   }, []);

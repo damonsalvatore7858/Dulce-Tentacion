@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -67,21 +68,33 @@ export default async function HomePage({ params }: Props) {
       <section className="relative overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand-pink/20 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 -left-24 size-80 rounded-full bg-brand-blue/20 blur-3xl" />
-        <div className="page-container section-y relative flex flex-col items-center gap-6 text-center">
-          <Badge variant="accent">{dict.home.eyebrow}</Badge>
-          <h1 className="font-display text-5xl leading-tight text-primary text-neon sm:text-6xl">
+        <div className="page-container section-y relative flex flex-col items-center gap-5 sm:gap-6 text-center">
+          <div className="relative flex items-center justify-center">
+            <div className="relative size-20 sm:size-24 overflow-hidden rounded-full border-4 border-card bg-card shadow-soft ring-4 ring-primary/20">
+              <Image
+                src="/brand/logo.jpg"
+                alt="Logo Dulce Tentación y algo más"
+                width={96}
+                height={96}
+                priority
+                className="size-full object-cover"
+              />
+            </div>
+          </div>
+          <Badge variant="accent" className="font-bold tracking-wide shadow-2xs">{dict.home.eyebrow}</Badge>
+          <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl leading-tight text-primary text-neon tracking-tight max-w-3xl">
             {dict.home.title}
           </h1>
-          <p className="max-w-xl text-lg text-muted-foreground">{dict.home.subtitle}</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
+          <p className="max-w-xl text-base sm:text-lg leading-relaxed text-muted-foreground">{dict.home.subtitle}</p>
+          <div className="flex w-full flex-col sm:w-auto sm:flex-row justify-center gap-3 pt-1">
+            <Button asChild size="lg" className="w-full sm:w-auto font-bold shadow-xs">
               <Link href={href(lang, "/carta")}>{dict.home.ctaMenu}</Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="outline" className="w-full sm:w-auto font-semibold">
               <Link href={href(lang, "/sedes")}>{dict.home.ctaSedes}</Link>
             </Button>
           </div>
-          <p className="font-display text-2xl">{dict.home.slogan2}</p>
+          <p className="font-display text-xl sm:text-2xl text-foreground/90 pt-2">{dict.home.slogan2}</p>
         </div>
       </section>
 

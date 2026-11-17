@@ -23,78 +23,79 @@
   --shadow-lift: 0 18px 44px -16px rgb(75 42 32 / 0.4);
 }
 
-/* Modo claro (por defecto) */
-:root {
+/* Modo claro (por defecto — fondo blanco) */
+:root,
+:root[data-theme="light"] {
   color-scheme: light;
-  --background: #fff7fa;
-  --foreground: #4b2a20;
+  --background: #ffffff;
+  --foreground: #381e18;
   --card: #ffffff;
-  --card-foreground: #4b2a20;
-  --muted: #fbd6e2;
-  --muted-foreground: #7a4a3e;
+  --card-foreground: #381e18;
+  --muted: #fdf2f6;
+  --muted-foreground: #6e463b;
   --primary: #c42a63;
   --primary-hover: #a8204f;
   --primary-foreground: #ffffff;
   --secondary: #4b2a20;
   --secondary-foreground: #ffffff;
-  --accent: #34b4e6;
-  --accent-foreground: #4b2a20;
+  --accent: #0ea5e9;
+  --accent-foreground: #ffffff;
   --destructive: #b3261e;
   --destructive-foreground: #ffffff;
-  --border: #f2c6d5;
-  --input: #a8737e;
+  --border: #f7dbe5;
+  --input: #96616e;
   --ring: #c42a63;
   --neon-glow: none;
 }
 
-/* Modo oscuro: automático según el sistema, salvo que el usuario elija "claro" */
+/* Modo oscuro explícito por usuario */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #190c09;
+  --foreground: #fbe9f0;
+  --card: #25140e;
+  --card-foreground: #fbe9f0;
+  --muted: #361f18;
+  --muted-foreground: #e5c4d0;
+  --primary: #f0648c;
+  --primary-hover: #f57fa0;
+  --primary-foreground: #190c09;
+  --secondary: #fbd6e2;
+  --secondary-foreground: #190c09;
+  --accent: #34b4e6;
+  --accent-foreground: #190c09;
+  --destructive: #ff8a80;
+  --destructive-foreground: #190c09;
+  --border: #4a2f26;
+  --input: #8f6a72;
+  --ring: #34b4e6;
+  --neon-glow: 0 0 14px rgb(240 100 140 / 0.55);
+}
+
+/* Modo sistema: solo se activa si el usuario eligió explícitamente "sistema" */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root[data-theme="system"] {
     color-scheme: dark;
-    --background: #1e100c;
+    --background: #190c09;
     --foreground: #fbe9f0;
-    --card: #2b1913;
+    --card: #25140e;
     --card-foreground: #fbe9f0;
-    --muted: #3a231b;
+    --muted: #361f18;
     --muted-foreground: #e5c4d0;
     --primary: #f0648c;
     --primary-hover: #f57fa0;
-    --primary-foreground: #1e100c;
+    --primary-foreground: #190c09;
     --secondary: #fbd6e2;
-    --secondary-foreground: #1e100c;
+    --secondary-foreground: #190c09;
     --accent: #34b4e6;
-    --accent-foreground: #1e100c;
+    --accent-foreground: #190c09;
     --destructive: #ff8a80;
-    --destructive-foreground: #1e100c;
+    --destructive-foreground: #190c09;
     --border: #4a2f26;
     --input: #8f6a72;
     --ring: #34b4e6;
     --neon-glow: 0 0 14px rgb(240 100 140 / 0.55);
   }
-}
-
-/* Modo oscuro elegido manualmente (mismos valores que el bloque anterior) */
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --background: #1e100c;
-  --foreground: #fbe9f0;
-  --card: #2b1913;
-  --card-foreground: #fbe9f0;
-  --muted: #3a231b;
-  --muted-foreground: #e5c4d0;
-  --primary: #f0648c;
-  --primary-hover: #f57fa0;
-  --primary-foreground: #1e100c;
-  --secondary: #fbd6e2;
-  --secondary-foreground: #1e100c;
-  --accent: #34b4e6;
-  --accent-foreground: #1e100c;
-  --destructive: #ff8a80;
-  --destructive-foreground: #1e100c;
-  --border: #4a2f26;
-  --input: #8f6a72;
-  --ring: #34b4e6;
-  --neon-glow: 0 0 14px rgb(240 100 140 / 0.55);
 }
 
 /* Expone los tokens semánticos como utilidades: bg-background, text-primary, etc. */

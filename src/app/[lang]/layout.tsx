@@ -56,10 +56,7 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fff7fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#1e100c" },
-  ],
+  themeColor: "#ffffff",
 };
 
 export default async function RootLayout({
@@ -74,8 +71,16 @@ export default async function RootLayout({
     <html
       lang={lang === "es" ? "es-CO" : "en"}
       className={`${nunito.variable} ${pacifico.variable}`}
+      data-theme="light"
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="system"){document.documentElement.setAttribute("data-theme",t);}else{document.documentElement.setAttribute("data-theme","light");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning className="flex min-h-dvh flex-col bg-background font-sans text-foreground antialiased">
         <a
           href="#contenido"

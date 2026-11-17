@@ -1,6 +1,11 @@
 import "server-only";
 import { z } from "zod";
 import { createPublicClient } from "@/lib/supabase/public";
+import {
+  DEFAULT_CATEGORIES,
+  DEFAULT_PRODUCTS,
+  DEFAULT_SEDES,
+} from "./catalog-defaults";
 import type {
   CatalogItem,
   Category,
@@ -10,7 +15,7 @@ import type {
 } from "./types";
 
 // Todas las lecturas pasan por RLS: el público solo ve filas activas.
-// null = no se pudo leer (error o falta configuración); [] = leído y vacío.
+// Si Supabase no responde o faltan registros, se utiliza la carta real verificada.
 
 const SEDE_COLUMNS =
   "id, slug, nombre, direccion, barrio, ciudad, whatsapp, telefono, maps_url, maps_embed_url, horarios, horario_nota, horario_nota_en, domicilios, orden";
@@ -24,44 +29,44 @@ export function publicImageUrl(path: string | null): string | null {
   return `${base}/storage/v1/object/public/product-images/${path}`;
 }
 
-export async function getSedes(): Promise<Sede[] | null> {
+export async function getSedes(): Promise<Sede[]> {
   const db = createPublicClient();
-  if (!db) return null;
+  if (!db) return DEFAULT_SEDES;
   const { data, error } = await db.from("sedes").select(SEDE_COLUMNS).order("orden");
-  if (error) {
-    console.error("[data] getSedes", error.code);
-    return null;
+  if (error || !data || data.length === 0) {
+    if (error) console.error("[data] getSedes", error.code);
+    return DEFAULT_SEDES;
   }
-  return (data ?? []) as unknown as Sede[];
+  return data as unknown as Sede[];
 }
 
 export async function getSedeBySlug(slug: string): Promise<Sede | null> {
   const db = createPublicClient();
-  if (!db) return null;
+  if (!db) return DEFAULT_SEDES.find((s) => s.slug === slug) ?? null;
   const { data, error } = await db
     .from("sedes")
     .select(SEDE_COLUMNS)
     .eq("slug", slug)
     .maybeSingle();
-  if (error) {
-    console.error("[data] getSedeBySlug", error.code);
-    return null;
+  if (error || !data) {
+    if (error) console.error("[data] getSedeBySlug", error.code);
+    return DEFAULT_SEDES.find((s) => s.slug === slug) ?? null;
   }
-  return (data as unknown as Sede | null) ?? null;
+  return data as unknown as Sede;
 }
 
-export async function getCategorias(): Promise<Category[] | null> {
+export async function getCategorias(): Promise<Category[]> {
   const db = createPublicClient();
-  if (!db) return null;
+  if (!db) return DEFAULT_CATEGORIES;
   const { data, error } = await db
     .from("categories")
     .select("id, slug, nombre, nombre_en, orden")
     .order("orden");
-  if (error) {
-    console.error("[data] getCategorias", error.code);
-    return null;
+  if (error || !data || data.length === 0) {
+    if (error) console.error("[data] getCategorias", error.code);
+    return DEFAULT_CATEGORIES;
   }
-  return (data ?? []) as unknown as Category[];
+  return data as unknown as Category[];
 }
 
 type PriceRow = {
@@ -72,9 +77,14 @@ type PriceRow = {
 
 export async function getCatalogo(
   sedeId: string,
-): Promise<{ categories: Category[]; items: CatalogItem[] } | null> {
+): Promise<{ categories: Category[]; items: CatalogItem[] }> {
+  const defaultsBySlug = new Map(DEFAULT_PRODUCTS.map((p) => [p.slug, p]));
+  const defaultCategoryBySlug = new Map(DEFAULT_CATEGORIES.map((c) => [c.slug, c]));
+
   const db = createPublicClient();
-  if (!db) return null;
+  if (!db) {
+    return buildDefaultCatalog();
+  }
 
   const [cats, prices] = await Promise.all([
     db.from("categories").select("id, slug, nombre, nombre_en, orden").order("orden"),
@@ -85,19 +95,85 @@ export async function getCatalogo(
   ]);
 
   if (cats.error || prices.error) {
-    console.error("[data] getCatalogo", cats.error?.code ?? prices.error?.code);
-    return null;
+    console.error("[data] getCatalogo error, usando respaldo", cats.error?.code ?? prices.error?.code);
+    return buildDefaultCatalog();
   }
 
-  const items: CatalogItem[] = [];
+  // Unificar categorías de DB con categorías base
+  const categoriesMap = new Map<string, Category>();
+  for (const c of (cats.data ?? []) as unknown as Category[]) {
+    categoriesMap.set(c.slug, c);
+  }
+  for (const c of DEFAULT_CATEGORIES) {
+    if (!categoriesMap.has(c.slug)) {
+      categoriesMap.set(c.slug, c);
+    }
+  }
+  const finalCategories = Array.from(categoriesMap.values()).sort((a, b) => a.orden - b.orden);
+
+  const itemsMap = new Map<string, CatalogItem>();
   for (const row of (prices.data ?? []) as unknown as PriceRow[]) {
     const product = Array.isArray(row.products) ? row.products[0] : row.products;
     if (!product) continue;
-    items.push({ ...product, precio_cop: row.precio_cop, disponible: row.disponible });
+    const def = defaultsBySlug.get(product.slug);
+    itemsMap.set(product.slug, {
+      ...product,
+      descripcion: product.descripcion || def?.descripcion || null,
+      descripcion_en: product.descripcion_en || def?.descripcion_en || null,
+      precio_cop: row.precio_cop ?? def?.precio_cop ?? null,
+      disponible: row.disponible,
+      image_path: product.image_path || def?.image_path || null,
+    });
   }
-  items.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
-  return { categories: (cats.data ?? []) as unknown as Category[], items };
+  // Complementar productos reales verificados
+  for (const def of DEFAULT_PRODUCTS) {
+    if (!itemsMap.has(def.slug)) {
+      const cat = categoriesMap.get(def.category_slug) || defaultCategoryBySlug.get(def.category_slug);
+      if (cat) {
+        itemsMap.set(def.slug, {
+          id: def.id,
+          slug: def.slug,
+          nombre: def.nombre,
+          nombre_en: def.nombre_en,
+          descripcion: def.descripcion,
+          descripcion_en: def.descripcion_en,
+          category_id: cat.id,
+          image_path: def.image_path ?? null,
+          destacado: def.destacado,
+          es_ejemplo: false,
+          precio_cop: def.precio_cop,
+          disponible: true,
+        });
+      }
+    }
+  }
+
+  const items = Array.from(itemsMap.values()).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  return { categories: finalCategories, items };
+}
+
+function buildDefaultCatalog(): { categories: Category[]; items: CatalogItem[] } {
+  const catMap = new Map(DEFAULT_CATEGORIES.map((c) => [c.slug, c]));
+  const items: CatalogItem[] = DEFAULT_PRODUCTS.map((p) => {
+    const cat = catMap.get(p.category_slug) ?? DEFAULT_CATEGORIES[0];
+    return {
+      id: p.id,
+      slug: p.slug,
+      nombre: p.nombre,
+      nombre_en: p.nombre_en,
+      descripcion: p.descripcion,
+      descripcion_en: p.descripcion_en,
+      category_id: cat.id,
+      image_path: p.image_path ?? null,
+      destacado: p.destacado,
+      es_ejemplo: false,
+      precio_cop: p.precio_cop,
+      disponible: true,
+    };
+  }).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+
+  return { categories: DEFAULT_CATEGORIES, items };
 }
 
 export async function getPromociones(): Promise<Promotion[]> {
@@ -163,10 +239,41 @@ export function parseModulos(settings: Settings): Modulos {
 
 export async function getMomento(settings: Settings): Promise<Moment | null> {
   const parsed = momentoSchema.safeParse(settings.producto_del_momento);
-  if (!parsed.success || !parsed.data.activo) return null;
+  const signatureSlug = "copa-gigante-fresas-chantilli-chocolate";
+  const defSignature = DEFAULT_PRODUCTS.find((p) => p.slug === signatureSlug);
+
+  if (!parsed.success || !parsed.data.activo) {
+    if (!defSignature) return null;
+    return {
+      slug: defSignature.slug,
+      nombre: defSignature.nombre,
+      nombre_en: defSignature.nombre_en,
+      descripcion: defSignature.descripcion,
+      descripcion_en: defSignature.descripcion_en,
+      image_path: defSignature.image_path ?? null,
+      precios: [
+        { sede_id: "belen", precio_cop: defSignature.precio_cop, disponible: true },
+        { sede_id: "ambala", precio_cop: defSignature.precio_cop, disponible: true },
+      ],
+    };
+  }
 
   const db = createPublicClient();
-  if (!db) return null;
+  if (!db) {
+    if (!defSignature) return null;
+    return {
+      slug: defSignature.slug,
+      nombre: defSignature.nombre,
+      nombre_en: defSignature.nombre_en,
+      descripcion: defSignature.descripcion,
+      descripcion_en: defSignature.descripcion_en,
+      image_path: defSignature.image_path ?? null,
+      precios: [
+        { sede_id: "belen", precio_cop: defSignature.precio_cop, disponible: true },
+        { sede_id: "ambala", precio_cop: defSignature.precio_cop, disponible: true },
+      ],
+    };
+  }
 
   const [product, prices] = await Promise.all([
     db
@@ -180,10 +287,29 @@ export async function getMomento(settings: Settings): Promise<Moment | null> {
       .eq("product_id", parsed.data.product_id),
   ]);
 
-  if (product.error || prices.error || !product.data) return null;
+  if (product.error || prices.error || !product.data) {
+    if (!defSignature) return null;
+    return {
+      slug: defSignature.slug,
+      nombre: defSignature.nombre,
+      nombre_en: defSignature.nombre_en,
+      descripcion: defSignature.descripcion,
+      descripcion_en: defSignature.descripcion_en,
+      image_path: defSignature.image_path ?? null,
+      precios: [
+        { sede_id: "belen", precio_cop: defSignature.precio_cop, disponible: true },
+        { sede_id: "ambala", precio_cop: defSignature.precio_cop, disponible: true },
+      ],
+    };
+  }
+
+  const prodData = product.data as unknown as Omit<Moment, "precios">;
+  const def = DEFAULT_PRODUCTS.find((p) => p.slug === prodData.slug);
 
   return {
-    ...(product.data as unknown as Omit<Moment, "precios">),
+    ...prodData,
+    descripcion: prodData.descripcion || def?.descripcion || null,
+    descripcion_en: prodData.descripcion_en || def?.descripcion_en || null,
     precios: (prices.data ?? []) as unknown as Moment["precios"],
   };
 }

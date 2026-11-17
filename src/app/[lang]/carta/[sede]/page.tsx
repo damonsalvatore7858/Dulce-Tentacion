@@ -99,13 +99,16 @@ export default async function CartaSedePage({ params }: Props) {
           <EmptyState message={dict.common.empty} />
         ) : (
           <>
-            <nav aria-label={dict.carta.categories}>
-              <ul className="flex flex-wrap gap-2">
+            <nav
+              aria-label={dict.carta.categories}
+              className="sticky top-16 z-20 -mx-4 px-4 py-2.5 bg-background/95 backdrop-blur-md border-y border-border/80 shadow-xs sm:static sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:border-none sm:shadow-none"
+            >
+              <ul className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar sm:flex-wrap">
                 {groups.map(({ category }) => (
-                  <li key={category.id}>
+                  <li key={category.id} className="shrink-0">
                     <a
                       href={`#cat-${category.slug}`}
-                      className="inline-flex min-h-11 items-center rounded-pill bg-muted px-4 font-bold hover:bg-accent hover:text-accent-foreground"
+                      className="inline-flex min-h-10 sm:min-h-11 items-center whitespace-nowrap rounded-pill bg-muted/80 px-4 text-xs sm:text-sm font-bold text-foreground transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 shadow-2xs"
                     >
                       {pick(lang, category.nombre, category.nombre_en)}
                     </a>

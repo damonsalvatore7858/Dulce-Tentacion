@@ -16,7 +16,7 @@ export function WhatsAppFab({ sede, label }: { sede: Sede; label: string }) {
       sede={sede.slug}
       canal="whatsapp_fab"
       aria-label={`${label} ${sede.nombre}`}
-      className="fixed bottom-20 right-4 z-20 flex size-14 items-center justify-center rounded-pill bg-accent text-accent-foreground shadow-lift transition-transform duration-200 hover:scale-105"
+      className="fixed bottom-22 right-4 sm:bottom-6 sm:right-6 z-20 flex size-14 items-center justify-center rounded-pill bg-accent text-accent-foreground shadow-lift ring-2 ring-background/60 transition-transform duration-200 hover:scale-105 active:scale-95"
     >
       <MessageCircle aria-hidden="true" className="size-7" />
     </TrackedLink>

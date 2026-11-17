@@ -1,26 +1,30 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type LogoProps = {
   className?: string;
   showWordmark?: boolean;
+  size?: number;
 };
 
-// LOGO PROVISIONAL: se reemplaza por el archivo original cuando el dueño lo entregue.
-export function Logo({ className, showWordmark = true }: LogoProps) {
+export function Logo({ className, showWordmark = true, size = 44 }: LogoProps) {
   return (
-    <span className={cn("inline-flex items-center gap-3", className)}>
-      <svg viewBox="0 0 48 48" aria-hidden="true" className="size-11 shrink-0">
-        <circle cx="24" cy="24" r="22" strokeWidth="3" className="fill-white stroke-brand-choco" />
-        <circle cx="24" cy="14" r="6" className="fill-brand-choco" />
-        <circle cx="17" cy="20" r="6" className="fill-brand-pink" />
-        <circle cx="31" cy="20" r="6" className="fill-brand-blue" />
-        <path d="M14 26h20l-10 15z" className="fill-brand-pastel stroke-brand-choco" strokeWidth="1.5" strokeLinejoin="round" />
-      </svg>
+    <span className={cn("inline-flex items-center gap-2.5 sm:gap-3", className)}>
+      <span className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-sm ring-2 ring-primary/20 bg-card">
+        <Image
+          src="/brand/logo.jpg"
+          alt="Logo Dulce Tentación y algo más"
+          width={size}
+          height={size}
+          priority
+          className="size-10 sm:size-11 object-cover"
+        />
+      </span>
       {showWordmark ? (
         <span className="flex flex-col leading-none">
-          <span className="font-display text-xl text-primary text-neon">Dulce Tentación</span>
-          <span className="mt-1 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Heladería
+          <span className="font-display text-xl sm:text-2xl text-primary text-neon tracking-tight">Dulce Tentación</span>
+          <span className="mt-1 text-[0.65rem] sm:text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Heladería &middot; Ibagué
           </span>
         </span>
       ) : (

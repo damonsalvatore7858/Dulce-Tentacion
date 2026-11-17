@@ -1,6 +1,7 @@
 "use server";
 
 import { formatCOP } from "@/lib/format/cop";
+import { DEFAULT_PRODUCTS } from "@/lib/data/catalog-defaults";
 import { LIMITS, type OrderResult } from "@/lib/order/limits";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { verifyTurnstile } from "@/lib/security/turnstile";
@@ -74,15 +75,31 @@ export async function createWhatsAppOrder(input: unknown): Promise<OrderResult> 
   const lines: OrderLine[] = [];
   let total = 0;
   let hasUnpriced = false;
+  const processedProductIds = new Set<string>();
+
   for (const row of (pricesResult.data ?? []) as unknown as PriceRow[]) {
     const product = Array.isArray(row.products) ? row.products[0] : row.products;
     const qty = quantities.get(row.product_id);
     if (!product || !qty || !row.disponible) continue;
 
+    processedProductIds.add(row.product_id);
     const name = data.lang === "en" && product.nombre_en ? product.nombre_en : product.nombre;
     lines.push({ name, qty, unitPrice: row.precio_cop });
     if (row.precio_cop === null) hasUnpriced = true;
     else total += row.precio_cop * qty;
+  }
+
+  // Complementar productos válidos de la carta que aún no se hayan sincronizado en DB
+  for (const [productId, qty] of quantities.entries()) {
+    if (!processedProductIds.has(productId)) {
+      const def = DEFAULT_PRODUCTS.find((p) => p.id === productId);
+      if (def) {
+        processedProductIds.add(productId);
+        const name = data.lang === "en" ? def.nombre_en : def.nombre;
+        lines.push({ name, qty, unitPrice: def.precio_cop });
+        total += def.precio_cop * qty;
+      }
+    }
   }
 
   if (lines.length === 0) return { ok: false, error: "empty" };

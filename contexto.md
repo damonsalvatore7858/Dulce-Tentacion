@@ -30,13 +30,19 @@ Fase 6: Panel de administración. Login con Supabase, verificación en dos pasos
 
 Fase 7: SEO y medición. Sitemap, robots, datos estructurados por sede sin calificación propia, botón flotante de WhatsApp, conteo anónimo de clics, analítica sin cookies y una política de seguridad (CSP) en modo de solo aviso.
 
-Fase 8: Auditoría de seguridad y refactorización. Completada. Se eliminaron las impurezas de renderizado de React 19, se configuró protección fail-fast contra DoS en pedidos antes de Zod, se verificó el cliente de Supabase y las políticas RLS.
-Fase 9: QA y entrega. Completada. Suite de pruebas automatizadas implementada en `tests/` con el test runner nativo de Node.js (`npm run test`), compilación limpia con Turbopack (`next build`), 0 errores de TypeScript y 0 advertencias en ESLint.
+Fase 8: Auditoría de seguridad y refactorización. Completada. Se eliminaron impurezas de renderizado de React 19, protección fail-fast contra DoS en pedidos antes de Zod, verificación de Supabase RLS y resolución de advertencias de variables no utilizadas en rate-limiting y Turnstile.
+Fase 9: QA, Optimización y Auditoría Integral. Completada.
+- Logo oficial integrado desde `public/brand/logo.jpg` en cabecera, pie, favicon y hero.
+- Fondo blanco puro (`#ffffff`) configurado como predeterminado global incondicional con script anti-flash, manteniendo soporte completo para modo oscuro y sistema.
+- Catálogo real ampliado a 16 referencias verificadas de Dulce Tentación Ibagué con nombres, descripciones bilingües y precios COP reales por sede (Waffles, Cholados, Copas, Ensaladas y Postres).
+- Experiencia móvil de alto confort (barra pegajosa horizontal de categorías, tarjetas optimizadas, botones táctiles y espaciado armónico sin colisiones con el botón flotante de WhatsApp).
+- Suite automatizada con 20/20 pruebas unitarias pasando (`npm run test`), 0 advertencias de ESLint (`npm run lint`), 0 errores de TypeScript (`npx tsc --noEmit`) y compilación limpia con Turbopack (`npm run build`).
 
 Dónde está cada cosa
 Raíz del proyecto: aplicación Next.js 16 con App Router, TypeScript y Tailwind CSS v4.
 src/: código fuente unificado (app, components, actions, lib, i18n).
-supabase/: migraciones SQL, seed y pruebas de seguridad RLS.
+public/brand/: logo oficial e identidad de marca servida estáticamente.
+supabase/: migraciones SQL, seed completo de 16 productos reales y pruebas RLS.
 tests/: pruebas unitarias automatizadas (`npm run test`).
 
 Estado de publicación

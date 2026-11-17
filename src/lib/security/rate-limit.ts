@@ -21,7 +21,12 @@ const memory = new Map<string, number[]>();
 function getLimiter(bucket: Bucket): Ratelimit | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
+  if (!url || !token) {
+    if (isProductionDeploy) {
+      console.warn("[security] UPSTASH_REDIS no configurado en producción; usando respaldo en memoria");
+    }
+    return null;
+  }
 
   let limiter = limiters.get(bucket);
   if (!limiter) {

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function AdminRootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es-CO" className={`${nunito.variable} ${pacifico.variable}`} suppressHydrationWarning>
+    <html lang="es-CO" className={`${nunito.variable} ${pacifico.variable}`} data-theme="light" suppressHydrationWarning>
       <body suppressHydrationWarning className="min-h-dvh bg-background font-sans text-foreground antialiased">
         {children}
       </body>
