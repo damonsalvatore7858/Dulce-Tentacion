@@ -45,6 +45,13 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
     },
     description: dict.meta.description,
     applicationName: dict.meta.siteName,
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/icon.png", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-icon.png" }],
+    },
     robots: isProductionDeploy ? undefined : { index: false, follow: false },
     openGraph: {
       type: "website",

@@ -10,6 +10,13 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { default: "Panel", template: "%s | Panel" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png" }],
+  },
   robots: { index: false, follow: false },
 };
 
