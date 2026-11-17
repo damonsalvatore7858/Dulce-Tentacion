@@ -9,6 +9,7 @@ import { CartBar } from "@/components/order/cart-bar";
 import { SiteHeader } from "@/components/layout/site-header";
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { getSettings, parseModulos } from "@/lib/data/queries";
 import { isProductionDeploy } from "@/lib/security/env";
 import { SITE_URL } from "@/lib/site";
 
@@ -65,7 +66,12 @@ export default async function RootLayout({
 }: LangParams & { children: ReactNode }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const dict = getDictionary(lang);
+  const [dict, settings] = await Promise.all([
+    getDictionary(lang),
+    getSettings(),
+  ]);
+  const modulos = parseModulos(settings);
+  const showEventos = Boolean(modulos.eventos || modulos.reservas);
 
   return (
     <html
@@ -97,6 +103,7 @@ export default async function RootLayout({
             theme: dict.theme,
             language: dict.language,
           }}
+          showEventos={showEventos}
         />
         <main id="contenido" className="flex-1">
           {children}

@@ -13,6 +13,7 @@ import type { Dictionary } from "@/i18n/dictionaries";
 type Props = {
   lang: Locale;
   dict: Pick<Dictionary, "meta" | "nav" | "a11y" | "theme" | "language">;
+  showEventos?: boolean;
 };
 
 const NAV_ITEMS: { key: keyof Dictionary["nav"]; path: string }[] = [
@@ -24,8 +25,9 @@ const NAV_ITEMS: { key: keyof Dictionary["nav"]; path: string }[] = [
   { key: "contacto", path: "/contacto" },
 ];
 
-export function SiteHeader({ lang, dict }: Props) {
+export function SiteHeader({ lang, dict, showEventos = true }: Props) {
   const [open, setOpen] = useState(false);
+  const navItems = NAV_ITEMS.filter((item) => item.key !== "eventos" || showEventos);
 
   // Cierra el menú móvil con Escape.
   useEffect(() => {
@@ -45,7 +47,7 @@ export function SiteHeader({ lang, dict }: Props) {
         </Link>
 
         <nav aria-label={dict.a11y.mainNav} className="hidden items-center gap-1 lg:flex">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.key}
               href={href(lang, item.path)}
@@ -80,7 +82,7 @@ export function SiteHeader({ lang, dict }: Props) {
         className="border-t border-border bg-background lg:hidden"
       >
         <ul className="page-container flex flex-col py-2">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <li key={item.key}>
               <Link
                 href={href(lang, item.path)}

@@ -19,18 +19,21 @@ type Props = { params: Promise<{ lang: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
+  const settings = await getSettings();
+  const modulos = parseModulos(settings);
+  if (!modulos.eventos && !modulos.reservas) return {};
   const dict = getDictionary(lang);
   return { title: dict.eventos.title, description: dict.eventos.intro, alternates: pageAlternates(lang, "/eventos") };
 }
 
-// El formulario con mensaje prellenado a WhatsApp llega en la Fase 5.
-// Por ahora: información y contacto directo con cada sede.
 export default async function EventosPage({ params }: Props) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dict = getDictionary(lang);
   const [sedes, settings] = await Promise.all([getSedes(), getSettings()]);
   const modulos = parseModulos(settings);
+
+  if (!modulos.eventos && !modulos.reservas) notFound();
 
   const formSedes = (sedes ?? [])
     .filter((sede) => validWhatsapp(sede.whatsapp) !== null)

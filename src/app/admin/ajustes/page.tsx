@@ -66,12 +66,15 @@ export default async function SettingsPage({ searchParams }: FlashParams) {
       </Card>
 
       <Card className="max-w-2xl p-5">
-        <h2 className="pb-3 font-display text-2xl">Módulos</h2>
+        <h2 className="pb-1 font-display text-2xl">Módulos del sitio</h2>
+        <p className="pb-3 text-sm text-muted-foreground">
+          Controla las secciones visibles para los clientes. Si desactivas ambas opciones, el enlace <strong>&quot;Eventos y reservas&quot;</strong> se ocultará automáticamente de la cabecera y del menú móvil.
+        </p>
         <form action={saveModulos} className="flex flex-col gap-3">
-          <Check name="reservas" label="Reservas" defaultChecked={modulos.reservas} />
-          <Check name="eventos" label="Eventos y pedidos por encargo" defaultChecked={modulos.eventos} />
+          <Check name="reservas" label="Habilitar reservas de mesas" defaultChecked={modulos.reservas} />
+          <Check name="eventos" label="Habilitar eventos y pedidos por encargo" defaultChecked={modulos.eventos} />
           <Button type="submit" size="sm" className="self-start">
-            Guardar
+            Guardar módulos
           </Button>
         </form>
       </Card>
